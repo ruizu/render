@@ -9,7 +9,7 @@ import (
 
 func TestRenderFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		File(w, "sample/content.single.html", map[string]interface{}{"hello": "Ruizu"}, http.StatusOK)
+		File(w, "sample/content.single.html", map[string]interface{}{}, http.StatusOK)
 	}))
 	defer ts.Close()
 
@@ -38,6 +38,48 @@ File content
 `
 	if string(data) != expected {
 		t.Fatalf("http test unexpected data: %q.", data)
+	}
+}
+
+func TestRenderFileInLayout(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		FileInLayout(w, "sample/layout.html", "sample/content.html", map[string]interface{}{}, http.StatusOK)
+	}))
+	defer ts.Close()
+
+	res, err := http.Get(ts.URL)
+	if err != nil {
+		t.Fatal("http test get error: ", err)
+	}
+
+	data, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	if err != nil {
+		t.Fatal("http test read data error: ", err)
+	}
+
+	expected := `
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Render File in Layout</title>
+</head>
+
+<body>
+
+Content inside layout
+
+</body>
+</html>
+
+
+
+
+
+`
+	if string(data) != expected {
+		t.Fatalf("http test unexpected data: %q. %q", data, expected)
 	}
 }
 

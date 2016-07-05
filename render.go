@@ -68,13 +68,12 @@ func Files(w http.ResponseWriter, files []string, context map[string]interface{}
 }
 
 func FileInLayout(w http.ResponseWriter, layout, file string, context map[string]interface{}, code ...int) error {
-	return Files(w, []string{layout, file}, context, code...)
+	return Files(w, []string{file, layout}, context, code...)
 }
 
 func FilesInLayout(w http.ResponseWriter, layout string, files []string, context map[string]interface{}, code ...int) error {
-	f := []string{layout}
-	f = append(f, files...)
-	return Files(w, f, context, code...)
+	files = append(files, layout)
+	return Files(w, files, context, code...)
 }
 
 func Error(w http.ResponseWriter, file string, code int) {
