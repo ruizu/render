@@ -4,12 +4,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
+func TestMain(m *testing.M) {
+	SetPath("sample")
+	os.Exit(m.Run())
+}
+
 func TestRenderFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		File(w, "sample/content.single.html", map[string]interface{}{}, http.StatusOK)
+		File(w, "content.single.html", map[string]interface{}{}, http.StatusOK)
 	}))
 	defer ts.Close()
 
@@ -43,7 +49,7 @@ File content
 
 func TestRenderFileInLayout(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		FileInLayout(w, "sample/layout.html", "sample/content.html", map[string]interface{}{}, http.StatusOK)
+		FileInLayout(w, "layout.html", "content.html", map[string]interface{}{}, http.StatusOK)
 	}))
 	defer ts.Close()
 
@@ -79,13 +85,13 @@ Content inside layout
 
 `
 	if string(data) != expected {
-		t.Fatalf("http test unexpected data: %q. %q", data, expected)
+		t.Fatalf("http test unexpected data: %q.", data)
 	}
 }
 
 func TestRenderError(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		Error(w, "sample/content.single.html", http.StatusInternalServerError)
+		Error(w, "content.single.html", http.StatusInternalServerError)
 	}))
 	defer ts.Close()
 
@@ -123,7 +129,7 @@ File content
 
 func TestRenderErrorNoFile(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		Error(w, "sample/error-no-file.html", http.StatusInternalServerError)
+		Error(w, "error-no-file.html", http.StatusInternalServerError)
 	}))
 	defer ts.Close()
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -14,7 +15,7 @@ var (
 )
 
 func SetPath(p string) {
-	path = strings.TrimRight(p, "/") + "/"
+	path = strings.TrimRight(p, string(os.PathSeparator)) + string(os.PathSeparator)
 }
 
 func JSON(w http.ResponseWriter, data interface{}, code ...int) error {
@@ -40,11 +41,11 @@ func File(w http.ResponseWriter, file string, context map[string]interface{}, co
 }
 
 func Files(w http.ResponseWriter, files []string, context map[string]interface{}, code ...int) error {
-	key := strings.Join(files, "\n")
 	templateFiles := make([]string, len(files))
 	for i, v := range files {
 		templateFiles[i] = fmt.Sprintf("%s%s", path, v)
 	}
+	key := strings.Join(templateFiles, "\n")
 
 	var t *template.Template
 	var ok bool
