@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -18,10 +19,11 @@ func SetPath(p string) {
 	path = strings.TrimRight(p, string(os.PathSeparator)) + string(os.PathSeparator)
 }
 
-func JSON(w http.ResponseWriter, data interface{}, code ...int) error {
+func JSON(w http.ResponseWriter, data interface{}, code ...int) {
 	b, err := json.Marshal(data)
 	if err != nil {
-		return err
+		log.Panic(err)
+		return
 	}
 
 	// set HTTP response code
@@ -30,17 +32,43 @@ func JSON(w http.ResponseWriter, data interface{}, code ...int) error {
 		c = code[0]
 	}
 
-	w.WriteHeader(c)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(c)
 	w.Write(b)
-	return nil
 }
 
-func File(w http.ResponseWriter, file string, context map[string]interface{}, code ...int) error {
-	return Files(w, []string{file}, context, code...)
+func File(w http.ResponseWriter, file string, context map[string]interface{}, code ...int) {
+	if err := renderFiles(w, []string{file}, context, code...); err != nil {
+		log.Panic(err)
+	}
 }
 
-func Files(w http.ResponseWriter, files []string, context map[string]interface{}, code ...int) error {
+func Files(w http.ResponseWriter, files []string, context map[string]interface{}, code ...int) {
+	if err := renderFiles(w, files, context, code...); err != nil {
+		log.Panic(err)
+	}
+}
+
+func FileInLayout(w http.ResponseWriter, layout, file string, context map[string]interface{}, code ...int) {
+	if err := renderFiles(w, []string{file, layout}, context, code...); err != nil {
+		log.Panic(err)
+	}
+}
+
+func FilesInLayout(w http.ResponseWriter, layout string, files []string, context map[string]interface{}, code ...int) {
+	files = append(files, layout)
+	if err := renderFiles(w, files, context, code...); err != nil {
+		log.Panic(err)
+	}
+}
+
+func Error(w http.ResponseWriter, file string, code int) {
+	if err := renderFiles(w, []string{file}, map[string]interface{}{}, code); err != nil {
+		http.Error(w, http.StatusText(code), code)
+	}
+}
+
+func renderFiles(w http.ResponseWriter, files []string, context map[string]interface{}, code ...int) error {
 	templateFiles := make([]string, len(files))
 	for i, v := range files {
 		templateFiles[i] = fmt.Sprintf("%s%s", path, v)
@@ -63,23 +91,7 @@ func Files(w http.ResponseWriter, files []string, context map[string]interface{}
 		c = code[0]
 	}
 
-	w.WriteHeader(c)
 	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(c)
 	return t.Execute(w, context)
-}
-
-func FileInLayout(w http.ResponseWriter, layout, file string, context map[string]interface{}, code ...int) error {
-	return Files(w, []string{file, layout}, context, code...)
-}
-
-func FilesInLayout(w http.ResponseWriter, layout string, files []string, context map[string]interface{}, code ...int) error {
-	files = append(files, layout)
-	return Files(w, files, context, code...)
-}
-
-func Error(w http.ResponseWriter, file string, code int) {
-	if err := Files(w, []string{file}, map[string]interface{}{}, code); err != nil {
-		http.Error(w, http.StatusText(code), code)
-		return
-	}
 }
