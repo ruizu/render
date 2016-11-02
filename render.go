@@ -56,7 +56,7 @@ func JSON(w http.ResponseWriter, data interface{}, code ...int) {
 		c = code[0]
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(c)
 	w.Write(b)
 }
@@ -121,7 +121,7 @@ func execute(w http.ResponseWriter, files []string, context map[string]interface
 		c = code[0]
 	}
 
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(c)
 	return t.Execute(w, context)
 }
